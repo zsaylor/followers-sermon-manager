@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Embedded Sermons</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+    <style>
+      body {
+        margin: 0;
+        padding: 1rem;
+        min-height: auto;
+      }
+      .container {
+        max-width: none;
+        margin: 0;
+        padding: 0;
+      }
+      header,
+      nav {
+        display: none;
+      }
+      .sermon-card {
+        margin-bottom: 1rem;
+      }
+      .sermon-card:last-child {
+        margin-bottom: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <main>
+        <div id="sermons-container">
+          <p class="loading">Loading sermons...</p>
+        </div>
+      </main>
+    </div>
+
+    <script src="/js/embed.js"></script>
+  </body>
+</html>

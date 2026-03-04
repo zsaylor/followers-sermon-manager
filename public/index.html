@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Upload Sermon - Sermon Manager</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <div class="logo-container">
+        <img
+          src="/images/followers_logo.png"
+          alt="Followers Logo"
+          class="logo"
+        />
+      </div>
+      <header>
+        <h1>Sermon Manager</h1>
+        <nav>
+          <a href="/sermons.html">View Sermons</a>
+        </nav>
+      </header>
+
+      <main>
+        <section id="login-section">
+          <h2>Admin Login</h2>
+          <form id="login-form">
+            <div class="form-group">
+              <label for="password">Password</label>
+              <input type="password" id="password" name="password" required />
+            </div>
+            <button type="submit">Login</button>
+            <p id="login-error" class="error hidden">Invalid password</p>
+          </form>
+        </section>
+
+        <section id="upload-section" class="hidden">
+          <h2>Upload New Sermon</h2>
+          <form id="upload-form">
+            <div class="form-group">
+              <label for="title">Sermon Title</label>
+              <input type="text" id="title" name="title" required />
+            </div>
+
+            <div class="form-group">
+              <label for="speaker">Speaker</label>
+              <input type="text" id="speaker" name="speaker" required />
+            </div>
+
+            <div class="form-group">
+              <label for="date">Date</label>
+              <input type="date" id="date" name="date" required />
+            </div>
+
+            <div class="form-group">
+              <label for="description">Description</label>
+              <textarea
+                id="description"
+                name="description"
+                rows="4"
+                required
+              ></textarea>
+            </div>
+
+            <div class="form-group">
+              <label for="audio">Audio File (MP3)</label>
+              <input
+                type="file"
+                id="audio"
+                name="audio"
+                accept=".mp3,audio/mpeg"
+                required
+              />
+              <p id="duration-info" class="info hidden"></p>
+            </div>
+
+            <div class="progress-container hidden" id="progress-container">
+              <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+              </div>
+              <p id="progress-text">0%</p>
+            </div>
+
+            <button type="submit" id="submit-btn">Upload Sermon</button>
+            <button type="button" id="logout-btn" class="secondary">
+              Logout
+            </button>
+          </form>
+
+          <p id="upload-message" class="message hidden"></p>
+        </section>
+
+        <section id="sermons-list-section">
+          <h2>Existing Sermons</h2>
+          <div id="sermons-list">
+            <p>Loading sermons...</p>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="/js/upload.js"></script>
+  </body>
+</html>

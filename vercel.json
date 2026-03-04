@@ -1,0 +1,37 @@
+{
+  "bunVersion": "1.x",
+  "framework": null,
+  "buildCommand": "tsc",
+  "outputDirectory": "public",
+  "rewrites": [{ "source": "/api/(.*)", "destination": "/api/$1" }],
+  "headers": [
+    {
+      "source": "/api/feed",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/rss+xml; charset=utf-8"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "s-maxage=300, stale-while-revalidate=600"
+        }
+      ]
+    },
+    {
+      "source": "/api/sermons",
+      "headers": [
+        { "key": "Content-Type", "value": "application/json" },
+        {
+          "key": "Cache-Control",
+          "value": "s-maxage=60, stale-while-revalidate=120"
+        },
+        { "key": "Access-Control-Allow-Origin", "value": "*" }
+      ]
+    },
+    {
+      "source": "/embed.html",
+      "headers": [{ "key": "X-Frame-Options", "value": "ALLOWALL" }]
+    }
+  ]
+}
