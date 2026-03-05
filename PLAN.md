@@ -143,7 +143,7 @@ ADMIN_PASSWORD=a_strong_password          # Simple auth for upload/delete
 
 **Purpose:** Receive a sermon upload from the frontend form, store the audio in R2, update `sermons.json`.
 
-**Authentication:** Require `Authorization: Bearer <ADMIN_PASSWORD>` header. Compare against `process.env.ADMIN_PASSWORD`. Return 401 if invalid.
+**Authentication:** Use an HTTP-only session cookie set by `POST /api/login`. Do not store the password in browser storage.
 
 **Request:** `multipart/form-data` with fields:
 
@@ -255,7 +255,7 @@ export const config = {
 
 **Purpose:** Delete a sermon by ID.
 
-**Authentication:** Require `Authorization: Bearer <ADMIN_PASSWORD>` header.
+**Authentication:** Require a valid HTTP-only session cookie.
 
 **Request:** JSON body `{ "id": "sermon-uuid" }`
 

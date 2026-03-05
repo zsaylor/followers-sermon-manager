@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { authenticate } from "../lib/auth";
+import { authenticateRequest } from "../lib/auth";
 import { getSermons, putSermons } from "../lib/r2";
 import type { Sermon } from "../lib/types";
 import { safeError, safeLog } from "../lib/logger";
@@ -23,8 +23,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  if (!authenticate(req)) {
-    return res.status(401).json({ error: "Unauthorized" });
+  const auth = authenticateRequest(req);
+  if (!auth.ok) {
+    if (auth.status === 429) {
+      if (auth.retryAfterSeconds) {
+        res.setHeader("Retry-After", String(auth.retryAfterSeconds));
+      }
+      return res.status(429).json({ error: auth.error });
+    }
+    return res.status(401).json({ error: auth.error });
   }
 
   try {

@@ -11,7 +11,7 @@
     createdAt: string;
   }
 
-  let authToken: string | null = null;
+  let isAuthenticated = false;
   let audioDuration: number | null = null;
 
   // DOM Elements - will be queried inside init()
@@ -31,7 +31,6 @@
   let uploadMessage: HTMLElement;
   let sermonsList: HTMLElement;
 
-  // Check for stored password on load
   function init() {
     loginSection = document.getElementById("login-section") as HTMLElement;
     uploadSection = document.getElementById("upload-section") as HTMLElement;
@@ -51,12 +50,9 @@
     uploadMessage = document.getElementById("upload-message") as HTMLElement;
     sermonsList = document.getElementById("sermons-list") as HTMLElement;
 
-    const storedPassword = sessionStorage.getItem("adminPassword");
-    if (storedPassword) {
-      authToken = storedPassword;
-      showUploadSection();
-    }
-    loadSermons();
+    // We rely on an HTTP-only cookie set by /api/login.
+    isAuthenticated = false;
+    restoreSession();
 
     // Load last speaker from localStorage
     const lastSpeaker = localStorage.getItem("lastSpeaker");
@@ -73,16 +69,12 @@
     loginForm.addEventListener("submit", (e: Event) => {
       e.preventDefault();
       const password = passwordInput.value;
-      authToken = password;
-      sessionStorage.setItem("adminPassword", password);
-      showUploadSection();
-      loginError.classList.add("hidden");
+      login(password);
     });
 
     // Logout handler
     logoutBtn.addEventListener("click", () => {
-      showLoginSection();
-      passwordInput.value = "";
+      logout();
     });
 
     // Audio file handler - calculate duration
@@ -116,8 +108,9 @@
     uploadForm.addEventListener("submit", (e: Event) => {
       e.preventDefault();
 
-      if (!authToken) {
+      if (!isAuthenticated) {
         showMessage("Not authenticated", "error");
+        showLoginSection();
         return;
       }
 
@@ -154,7 +147,6 @@
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${authToken}`,
             },
             body: JSON.stringify({
               title,
@@ -221,7 +213,6 @@
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${authToken}`,
             },
             body: JSON.stringify({
               id,
@@ -280,8 +271,67 @@
   function showLoginSection() {
     loginSection.classList.remove("hidden");
     uploadSection.classList.add("hidden");
-    authToken = null;
-    sessionStorage.removeItem("adminPassword");
+    isAuthenticated = false;
+  }
+
+  async function login(password: string) {
+    loginError.textContent = "Invalid password";
+    loginError.classList.add("hidden");
+    try {
+      const res = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password }),
+      });
+
+      if (res.ok) {
+        isAuthenticated = true;
+        showUploadSection();
+        passwordInput.value = "";
+        loadSermons();
+        return;
+      }
+
+      if (res.status === 429) {
+        loginError.textContent =
+          "Too many failed attempts. Please wait and try again.";
+        loginError.classList.remove("hidden");
+        return;
+      }
+
+      loginError.classList.remove("hidden");
+    } catch {
+      loginError.textContent = "Login failed. Please try again.";
+      loginError.classList.remove("hidden");
+    }
+  }
+
+  async function restoreSession() {
+    try {
+      const res = await fetch("/api/session");
+      const json = await res.json();
+      isAuthenticated = Boolean(json?.ok);
+      if (isAuthenticated) {
+        showUploadSection();
+      } else {
+        showLoginSection();
+      }
+    } catch {
+      showLoginSection();
+    } finally {
+      loadSermons();
+    }
+  }
+
+  async function logout() {
+    try {
+      await fetch("/api/logout", { method: "POST" });
+    } catch {
+      // ignore
+    }
+    showLoginSection();
+    passwordInput.value = "";
+    loadSermons();
   }
 
   function showMessage(message: string, type: "success" | "error") {
@@ -324,7 +374,7 @@
           <p class="sermon-description">${escapeHtml(sermon.description)}</p>
           <audio controls src="${sermon.audioUrl}"></audio>
           ${
-            authToken
+            isAuthenticated
               ? `
             <div class="sermon-actions">
               <button class="delete" data-id="${sermon.id}">Delete</button>
@@ -338,7 +388,7 @@
         .join("");
 
       // Add delete handlers
-      if (authToken) {
+      if (isAuthenticated) {
         document.querySelectorAll(".sermon-actions .delete").forEach((btn) => {
           btn.addEventListener("click", handleDelete);
         });
@@ -373,7 +423,6 @@
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${authToken}`,
         },
         body: JSON.stringify({ id }),
       });

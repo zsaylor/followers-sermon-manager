@@ -94,8 +94,9 @@ R2_ACCOUNT_ID=your_cloudflare_account_id
 R2_ACCESS_KEY_ID=your_r2_access_key
 R2_SECRET_ACCESS_KEY=your_r2_secret_key
 R2_BUCKET_NAME=sermons
-R2_PUBLIC_URL=https://pub-xxxx.r2.dev
-ADMIN_PASSWORD=choose_a_strong_password_here
+ R2_PUBLIC_URL=https://pub-xxxx.r2.dev
+ ADMIN_PASSWORD=choose_a_strong_password_here
+ ADMIN_SESSION_SECRET=optional_random_string_for_cookie_signing
 ```
 
 ### 4. Installation & Build
@@ -193,22 +194,33 @@ The `limit` parameter controls how many sermons to display (default is 5).
 
 ## API Endpoints
 
+### POST /api/login
+
+- Authenticates an admin password and sets an HTTP-only session cookie
+- JSON body: `{ "password": "..." }`
+- On success: returns `{ ok: true }`
+
+### POST /api/logout
+
+- Clears the HTTP-only session cookie
+- Returns `{ ok: true }`
+
 ### POST /api/upload-url
 
 - Returns a presigned URL for directly uploading audio to R2
-- Requires `Authorization: Bearer <ADMIN_PASSWORD>` header
+- Requires a valid admin session cookie (set by `POST /api/login`)
 - JSON body fields: `title`, `description`, `speaker`, `date`, `durationSeconds`, `contentType`, `fileSize`
 
 ### POST /api/upload-complete
 
 - Finalizes an upload by saving sermon metadata to `sermons.json`
-- Requires `Authorization: Bearer <ADMIN_PASSWORD>` header
+- Requires a valid admin session cookie (set by `POST /api/login`)
 - JSON body fields: `id`, `title`, `description`, `speaker`, `date`, `durationSeconds`, `audioUrl`, `audioFileSize`
 
 ### POST /api/upload (legacy)
 
 - Legacy multipart upload endpoint (kept for compatibility)
-- Requires `Authorization: Bearer <ADMIN_PASSWORD>` header
+- Requires a valid admin session cookie (set by `POST /api/login`)
 - Form data fields: `title`, `description`, `speaker`, `date`, `audio` (MP3 file), `durationSeconds`
 
 ### GET /api/feed
@@ -225,12 +237,14 @@ The `limit` parameter controls how many sermons to display (default is 5).
 ### DELETE /api/delete
 
 - Delete a sermon by ID
-- Requires `Authorization: Bearer <ADMIN_PASSWORD>` header
+- Requires a valid admin session cookie (set by `POST /api/login`)
 - Request body: `{ "id": "sermon-uuid" }`
 
 ## Security Notes
 
 - The `ADMIN_PASSWORD` is a simple shared secret. Keep it secure.
+- The app uses an HTTP-only session cookie (not readable by JS) to avoid storing passwords in browser storage.
+- Basic in-memory rate limiting is applied to failed auth attempts.
 - Only authenticated requests can upload or delete sermons.
 - File uploads are limited to 200MB.
 - Only MP3 files are accepted.

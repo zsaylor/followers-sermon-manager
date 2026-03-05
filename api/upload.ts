@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import Busboy from "busboy";
 import { randomUUID } from "crypto";
-import { authenticate } from "../lib/auth";
+import { authenticateRequest } from "../lib/auth";
 import {
   r2,
   BUCKET,
@@ -35,9 +35,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  if (!authenticate(req)) {
+  const auth = authenticateRequest(req);
+  if (!auth.ok) {
     safeLog("UPLOAD", "Authentication failed");
-    return res.status(401).json({ error: "Unauthorized" });
+    if (auth.status === 429) {
+      if (auth.retryAfterSeconds) {
+        res.setHeader("Retry-After", String(auth.retryAfterSeconds));
+      }
+      return res.status(429).json({ error: auth.error });
+    }
+    return res.status(401).json({ error: auth.error });
   }
 
   try {
@@ -126,7 +133,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
 
       safeLog("UPLOAD", "Piping request to Busboy...");
-      safeLog("UPLOAD", "Request headers:", JSON.stringify(req.headers));
+      // Avoid logging sensitive headers (authorization/cookie).
+      const safeHeaders = { ...req.headers } as any;
+      if (safeHeaders.authorization) safeHeaders.authorization = "[REDACTED]";
+      if (safeHeaders.cookie) safeHeaders.cookie = "[REDACTED]";
+      safeLog("UPLOAD", "Request headers:", JSON.stringify(safeHeaders));
       if (req.body) {
         safeLog("UPLOAD", "Using req.body (size:", req.body.length, "bytes)");
         busboy.end(req.body);
