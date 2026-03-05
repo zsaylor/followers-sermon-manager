@@ -126,32 +126,132 @@
         return;
       }
 
+      const file = audioInput.files?.[0];
+      if (!file) {
+        showMessage("No audio file selected", "error");
+        return;
+      }
+
       const formData = new FormData(uploadForm);
-      formData.append("durationSeconds", audioDuration.toString());
+      const title = String(formData.get("title") || "");
+      const speaker = String(formData.get("speaker") || "");
+      const date = String(formData.get("date") || "");
+      const description = String(formData.get("description") || "");
 
       // Save speaker to localStorage
-      const speaker = formData.get("speaker") as string;
       localStorage.setItem("lastSpeaker", speaker);
 
       // Show progress
       progressContainer.classList.remove("hidden");
       submitBtn.disabled = true;
+      progressFill.style.width = "0%";
+      progressText.textContent = "0%";
 
-      // Use XMLHttpRequest for upload progress
-      const xhr = new XMLHttpRequest();
+      (async () => {
+        try {
+          // Step 1: request a presigned upload URL from our API
+          const urlRes = await fetch("/api/upload-url", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${authToken}`,
+            },
+            body: JSON.stringify({
+              title,
+              description,
+              speaker,
+              date,
+              durationSeconds: audioDuration,
+              contentType: file.type || "audio/mpeg",
+              fileSize: file.size,
+            }),
+          });
 
-      xhr.upload.addEventListener("progress", (e: ProgressEvent) => {
-        if (e.lengthComputable) {
-          const percentComplete = Math.round((e.loaded / e.total) * 100);
-          progressFill.style.width = `${percentComplete}%`;
-          progressText.textContent = `${percentComplete}%`;
-        }
-      });
+          if (urlRes.status === 401) {
+            showMessage("Authentication failed. Please login again.", "error");
+            showLoginSection();
+            return;
+          }
 
-      xhr.addEventListener("load", () => {
-        submitBtn.disabled = false;
+          const urlJson = await urlRes.json();
+          if (!urlRes.ok) {
+            showMessage(
+              urlJson.details || urlJson.error || "Upload init failed",
+              "error",
+            );
+            return;
+          }
 
-        if (xhr.status === 200) {
+          const { id, uploadUrl, audioUrl } = urlJson as {
+            id: string;
+            uploadUrl: string;
+            audioUrl: string;
+          };
+
+          // Step 2: upload the file directly to R2
+          await new Promise<void>((resolve, reject) => {
+            const putXhr = new XMLHttpRequest();
+            putXhr.upload.addEventListener("progress", (e: ProgressEvent) => {
+              if (e.lengthComputable) {
+                const percentComplete = Math.round((e.loaded / e.total) * 100);
+                progressFill.style.width = `${percentComplete}%`;
+                progressText.textContent = `${percentComplete}%`;
+              }
+            });
+
+            putXhr.addEventListener("load", () => {
+              if (putXhr.status >= 200 && putXhr.status < 300) {
+                resolve();
+              } else {
+                reject(new Error(`R2 upload failed (HTTP ${putXhr.status})`));
+              }
+            });
+
+            putXhr.addEventListener("error", () => {
+              reject(new Error("R2 upload failed"));
+            });
+
+            putXhr.open("PUT", uploadUrl);
+            putXhr.setRequestHeader("Content-Type", file.type || "audio/mpeg");
+            putXhr.send(file);
+          });
+
+          // Step 3: finalize by saving sermon metadata in sermons.json
+          const completeRes = await fetch("/api/upload-complete", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${authToken}`,
+            },
+            body: JSON.stringify({
+              id,
+              title,
+              description,
+              speaker,
+              date,
+              durationSeconds: audioDuration,
+              audioUrl,
+              audioFileSize: file.size,
+            }),
+          });
+
+          if (completeRes.status === 401) {
+            showMessage("Authentication failed. Please login again.", "error");
+            showLoginSection();
+            return;
+          }
+
+          const completeJson = await completeRes.json();
+          if (!completeRes.ok) {
+            showMessage(
+              completeJson.details ||
+                completeJson.error ||
+                "Upload finalize failed",
+              "error",
+            );
+            return;
+          }
+
           showMessage("Sermon uploaded successfully!", "success");
           uploadForm.reset();
           progressContainer.classList.add("hidden");
@@ -160,23 +260,15 @@
           durationInfo.classList.add("hidden");
           audioDuration = null;
           loadSermons();
-        } else if (xhr.status === 401) {
-          showMessage("Authentication failed. Please login again.", "error");
-          showLoginSection();
-        } else {
-          const response = JSON.parse(xhr.responseText);
-          showMessage(response.error || "Upload failed", "error");
+        } catch (err: any) {
+          showMessage(
+            err?.message || "Upload failed. Please try again.",
+            "error",
+          );
+        } finally {
+          submitBtn.disabled = false;
         }
-      });
-
-      xhr.addEventListener("error", () => {
-        submitBtn.disabled = false;
-        showMessage("Upload failed. Please try again.", "error");
-      });
-
-      xhr.open("POST", "/api/upload");
-      xhr.setRequestHeader("Authorization", `Bearer ${authToken}`);
-      xhr.send(formData);
+      })();
     });
   }
 

@@ -136,6 +136,26 @@ Or connect your GitHub repository to Vercel for automatic deployments on push.
 3. Fill in the sermon details and upload an MP3 file
 4. The audio duration is automatically calculated client-side
 
+Note: uploads are performed directly from the browser to Cloudflare R2 using a presigned URL. This avoids Vercel request body limits on the Hobby plan.
+
+#### Cloudflare R2 CORS
+
+Because the browser uploads directly to R2, you must allow CORS on your R2 bucket for your site origin.
+
+In Cloudflare Dashboard -> R2 -> your bucket -> CORS, add a rule similar to:
+
+```json
+[
+  {
+    "AllowedOrigins": ["http://localhost:3000", "https://your-app.vercel.app"],
+    "AllowedMethods": ["PUT", "GET", "HEAD"],
+    "AllowedHeaders": ["*"],
+    "ExposeHeaders": ["ETag"],
+    "MaxAgeSeconds": 3600
+  }
+]
+```
+
 ### Public Sermon Page
 
 Visit `https://your-app.vercel.app/sermons.html` to see all sermons with audio players.
@@ -173,9 +193,21 @@ The `limit` parameter controls how many sermons to display (default is 5).
 
 ## API Endpoints
 
-### POST /api/upload
+### POST /api/upload-url
 
-- Upload a new sermon
+- Returns a presigned URL for directly uploading audio to R2
+- Requires `Authorization: Bearer <ADMIN_PASSWORD>` header
+- JSON body fields: `title`, `description`, `speaker`, `date`, `durationSeconds`, `contentType`, `fileSize`
+
+### POST /api/upload-complete
+
+- Finalizes an upload by saving sermon metadata to `sermons.json`
+- Requires `Authorization: Bearer <ADMIN_PASSWORD>` header
+- JSON body fields: `id`, `title`, `description`, `speaker`, `date`, `durationSeconds`, `audioUrl`, `audioFileSize`
+
+### POST /api/upload (legacy)
+
+- Legacy multipart upload endpoint (kept for compatibility)
 - Requires `Authorization: Bearer <ADMIN_PASSWORD>` header
 - Form data fields: `title`, `description`, `speaker`, `date`, `audio` (MP3 file), `durationSeconds`
 

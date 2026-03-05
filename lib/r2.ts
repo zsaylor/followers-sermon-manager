@@ -4,6 +4,7 @@ import {
   PutObjectCommand,
   DeleteObjectCommand,
 } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { Sermon, SermonsData } from "./types";
 
 export const r2 = new S3Client({
@@ -60,6 +61,20 @@ export async function uploadAudio(
     ContentType: contentType,
   });
   await r2.send(command);
+}
+
+export async function createPresignedUploadUrl(
+  key: string,
+  contentType: string,
+  expiresInSeconds: number = 10 * 60,
+): Promise<string> {
+  const command = new PutObjectCommand({
+    Bucket: BUCKET,
+    Key: key,
+    ContentType: contentType,
+  });
+
+  return getSignedUrl(r2, command, { expiresIn: expiresInSeconds });
 }
 
 export async function deleteAudio(key: string): Promise<void> {

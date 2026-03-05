@@ -1,0 +1,101 @@
+import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { authenticate } from "../lib/auth";
+import { getSermons, putSermons } from "../lib/r2";
+import type { Sermon } from "../lib/types";
+import { safeError, safeLog } from "../lib/logger";
+
+function parseJsonBody(req: VercelRequest): any {
+  const body: any = (req as any).body;
+  if (typeof body === "string") {
+    try {
+      return JSON.parse(body);
+    } catch {
+      return null;
+    }
+  }
+  return body;
+}
+
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  safeLog("UPLOAD_COMPLETE", "Handler started");
+
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  if (!authenticate(req)) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  try {
+    const body = parseJsonBody(req);
+    if (!body) {
+      return res.status(400).json({ error: "Invalid JSON body" });
+    }
+
+    const {
+      id,
+      title,
+      description,
+      speaker,
+      date,
+      durationSeconds,
+      audioUrl,
+      audioFileSize,
+    } = body;
+
+    const required = [
+      ["id", id],
+      ["title", title],
+      ["description", description],
+      ["speaker", speaker],
+      ["date", date],
+      ["durationSeconds", durationSeconds],
+      ["audioUrl", audioUrl],
+      ["audioFileSize", audioFileSize],
+    ] as const;
+
+    for (const [name, value] of required) {
+      if (value === undefined || value === null || value === "") {
+        return res
+          .status(400)
+          .json({ error: `Missing required field: ${name}` });
+      }
+    }
+
+    const duration = Number(durationSeconds);
+    if (!Number.isFinite(duration) || duration <= 0) {
+      return res.status(400).json({ error: "Invalid durationSeconds" });
+    }
+
+    const size = Number(audioFileSize);
+    if (!Number.isFinite(size) || size <= 0) {
+      return res.status(400).json({ error: "Invalid audioFileSize" });
+    }
+
+    const sermon: Sermon = {
+      id: String(id),
+      title: String(title),
+      description: String(description),
+      speaker: String(speaker),
+      date: String(date),
+      audioUrl: String(audioUrl),
+      audioFileSize: size,
+      durationSeconds: Math.round(duration),
+      createdAt: new Date().toISOString(),
+    };
+
+    safeLog("UPLOAD_COMPLETE", "Saving sermon:", sermon.id);
+    const sermons = await getSermons();
+    sermons.unshift(sermon);
+    await putSermons(sermons);
+
+    return res.status(200).json(sermon);
+  } catch (err: any) {
+    safeError("UPLOAD_COMPLETE", err);
+    return res.status(500).json({
+      error: "Internal server error",
+      details: err?.message || String(err),
+    });
+  }
+}

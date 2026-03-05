@@ -5,6 +5,10 @@ export function safeLog(label: string, ...args: any[]) {
     .map((arg) => {
       if (arg === null) return "null";
       if (arg === undefined) return "undefined";
+      // Handle Buffer objects explicitly
+      if (Buffer.isBuffer(arg)) {
+        return arg.toString("utf8");
+      }
       if (typeof arg === "object") {
         try {
           // Avoid circular references and use simple stringification
@@ -38,7 +42,10 @@ export function safeError(label: string, error: any) {
   try {
     if (error === null) errorStr = "null";
     else if (error === undefined) errorStr = "undefined";
-    else if (typeof error === "object") {
+    // Handle Buffer objects explicitly
+    else if (Buffer.isBuffer(error)) {
+      errorStr = error.toString("utf8");
+    } else if (typeof error === "object") {
       const parts: string[] = [];
       if (error.name) parts.push(`Name: ${error.name}`);
       if (error.code) parts.push(`Code: ${error.code}`);
@@ -57,5 +64,6 @@ export function safeError(label: string, error: any) {
     errorStr = `Failed to stringify error: ${String(error)}`;
   }
 
-  console.error(`[${timestamp}] ${label} ERROR: ${errorStr}`);
+  // Many dev runners render stderr as raw Buffers; keep errors human-readable.
+  console.log(`[${timestamp}] ${label} ERROR: ${errorStr}`);
 }
