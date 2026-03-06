@@ -8,6 +8,7 @@ export interface Sermon {
   audioFileSize: number;
   durationSeconds: number;
   createdAt: string;
+  keywords?: string[];
 }
 
 export interface PodcastMeta {

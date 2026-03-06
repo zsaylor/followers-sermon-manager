@@ -49,6 +49,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       durationSeconds,
       audioUrl,
       audioFileSize,
+      keywords,
     } = body;
 
     const required = [
@@ -90,6 +91,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       audioFileSize: size,
       durationSeconds: Math.round(duration),
       createdAt: new Date().toISOString(),
+      keywords: keywords && Array.isArray(keywords) ? keywords : undefined,
     };
 
     safeLog("UPLOAD_COMPLETE", "Saving sermon:", sermon.id);

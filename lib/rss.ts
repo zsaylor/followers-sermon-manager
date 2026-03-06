@@ -46,6 +46,10 @@ export function generateRssFeed(sermons: Sermon[], meta: PodcastMeta): string {
         "",
       );
 
+      const keywordsXml = sermon.keywords
+        ? `      <itunes:keywords>${escapeXml(sermon.keywords.join(","))}</itunes:keywords>\n`
+        : "";
+
       return `    <item>
       <title>${escapeXml(sermon.title)}</title>
       <description>${escapeXml(sermon.description)}</description>
@@ -57,7 +61,7 @@ export function generateRssFeed(sermons: Sermon[], meta: PodcastMeta): string {
       <itunes:author>${escapeXml(sermon.speaker)}</itunes:author>
       <itunes:duration>${sermon.durationSeconds}</itunes:duration>
       <itunes:explicit>false</itunes:explicit>
-    </item>`;
+${keywordsXml}    </item>`;
     })
     .join("\n");
 

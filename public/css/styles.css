@@ -92,6 +92,7 @@ textarea {
   border-radius: 4px;
   font-size: 1rem;
   font-family: inherit;
+  background-color: #f5f4f0;
 }
 
 input:focus,
@@ -107,7 +108,6 @@ textarea {
 
 button {
   background-color: #2eada8;
-  /* background-color: #3498db; */
   color: white;
   padding: 0.75rem 1.5rem;
   border: none;
@@ -200,7 +200,7 @@ button:disabled {
 
 /* Sermon Cards */
 .sermon-card {
-  background: white;
+  background: #f5f4f0;
   border-radius: 8px;
   padding: 1.5rem;
   margin-bottom: 1.5rem;
@@ -274,11 +274,12 @@ audio {
 }
 
 .sermon-actions button.delete {
-  background-color: #e74c3c;
+  background-color: #dc5284;
+  /* background-color: #e74c3c; */
 }
 
 .sermon-actions button.delete:hover {
-  background-color: #c0392b;
+  background-color: #d42b69;
 }
 
 .loading {
@@ -294,6 +295,30 @@ audio {
 
 .pagination button {
   min-width: 150px;
+}
+
+.sermon-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.75rem 0;
+}
+
+.tag {
+  display: inline-block;
+  background-color: #2eada8;
+  color: #ffffff;
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.help-text {
+  display: block;
+  color: #888;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
 }
 
 /* Responsive */

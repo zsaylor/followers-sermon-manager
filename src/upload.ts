@@ -9,6 +9,7 @@
     audioFileSize: number;
     durationSeconds: number;
     createdAt: string;
+    keywords?: string[];
   }
 
   let isAuthenticated = false;
@@ -130,6 +131,13 @@
       const speaker = String(formData.get("speaker") || "");
       const date = String(formData.get("date") || "");
       const description = String(formData.get("description") || "");
+      const keywordsStr = String(formData.get("keywords") || "");
+      const keywords = keywordsStr
+        ? keywordsStr
+            .split(",")
+            .map((k) => k.trim())
+            .filter((k) => k)
+        : undefined;
 
       // Save speaker to localStorage
       localStorage.setItem("lastSpeaker", speaker);
@@ -223,6 +231,7 @@
               durationSeconds: audioDuration,
               audioUrl,
               audioFileSize: file.size,
+              keywords,
             }),
           });
 
@@ -344,7 +353,7 @@
     }, 5000);
   }
 
-  // Load and display sermons
+  // Load and display latest sermon
   async function loadSermons() {
     try {
       const response = await fetch("/api/sermons");
@@ -355,44 +364,31 @@
         return;
       }
 
-      sermonsList.innerHTML = data.sermons
-        .map((sermon: Sermon) => {
-          const date = new Date(sermon.date).toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-          });
+      // Show only the first sermon (most recent)
+      const sermon = data.sermons[0];
+      const date = new Date(sermon.date).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
 
-          const duration = formatDuration(sermon.durationSeconds);
+      const duration = formatDuration(sermon.durationSeconds);
+      const tagsHtml =
+        sermon.keywords && sermon.keywords.length > 0
+          ? `<div class="sermon-tags">${sermon.keywords.map((tag: string) => `<span class="tag">${escapeHtml(tag)}</span>`).join("")}</div>`
+          : "";
 
-          return `
+      sermonsList.innerHTML = `
         <div class="sermon-card">
           <h3>${escapeHtml(sermon.title)}</h3>
           <div class="sermon-meta">
             ${escapeHtml(sermon.speaker)} • ${date} • ${duration}
           </div>
+          ${tagsHtml}
           <p class="sermon-description">${escapeHtml(sermon.description)}</p>
           <audio controls src="${sermon.audioUrl}"></audio>
-          ${
-            isAuthenticated
-              ? `
-            <div class="sermon-actions">
-              <button class="delete" data-id="${sermon.id}">Delete</button>
-            </div>
-          `
-              : ""
-          }
         </div>
       `;
-        })
-        .join("");
-
-      // Add delete handlers
-      if (isAuthenticated) {
-        document.querySelectorAll(".sermon-actions .delete").forEach((btn) => {
-          btn.addEventListener("click", handleDelete);
-        });
-      }
     } catch (error) {
       sermonsList.innerHTML = "<p>Error loading sermons.</p>";
     }
@@ -408,37 +404,6 @@
     const div = document.createElement("div");
     div.textContent = text;
     return div.innerHTML;
-  }
-
-  async function handleDelete(e: Event) {
-    const btn = e.target as HTMLButtonElement;
-    const id = btn.dataset.id;
-
-    if (!id || !confirm("Are you sure you want to delete this sermon?")) {
-      return;
-    }
-
-    try {
-      const response = await fetch("/api/delete", {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ id }),
-      });
-
-      if (response.ok) {
-        loadSermons();
-        showMessage("Sermon deleted successfully", "success");
-      } else if (response.status === 401) {
-        showMessage("Authentication failed. Please login again.", "error");
-        showLoginSection();
-      } else {
-        showMessage("Failed to delete sermon", "error");
-      }
-    } catch (error) {
-      showMessage("Error deleting sermon", "error");
-    }
   }
 
   // Initialize

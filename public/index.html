@@ -64,6 +64,19 @@
             </div>
 
             <div class="form-group">
+              <label for="keywords">Tags (comma-separated)</label>
+              <input
+                type="text"
+                id="keywords"
+                name="keywords"
+                placeholder="e.g., colossians, acts, romans"
+              />
+              <small class="help-text"
+                >Add tags to organize sermons into playlists</small
+              >
+            </div>
+
+            <div class="form-group">
               <label for="audio">Audio File (MP3)</label>
               <input
                 type="file"
@@ -92,7 +105,7 @@
         </section>
 
         <section id="sermons-list-section">
-          <h2>Existing Sermons</h2>
+          <h2>Latest Sermon</h2>
           <div id="sermons-list">
             <p>Loading sermons...</p>
           </div>
