@@ -1,12 +1,13 @@
 - [x] Update podcastMeta.json with info from Spotify
-- [ ] Upload sermons.json and podcastMeta.json to R2
+- [x] Upload sermons.json and podcastMeta.json to R2
 - [ ] Review all code
-- [ ] Add sermon playlist section (i.e. Colossians, Acts, etc)
-- [ ] Test with first podcast and ensure appears on RSS feed
+- [x] Add sermon playlist section (i.e. Colossians, Acts, etc)
+- [x] Test with first podcast and ensure appears on RSS feed
 - [ ] Test embedded website player
-- [ ] Deploy vercel
+- [x] Deploy vercel
 - [ ] Upload all sermons
   - Figure out how to deal with existing Spotify uploads
 - [ ] Clean up repo and post publically
   - Ignore public/js
   - Install prettier precommit hook mentioned in docs
+- [ ] Add website link to sermon page ( <link> element )
