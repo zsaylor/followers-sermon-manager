@@ -10,5 +10,5 @@
     "rootDir": ".",
     "lib": ["ES2020"]
   },
-  "include": ["api/**/*.ts", "lib/**/*.ts"]
+  "include": ["api/**/*.ts", "lib/**/*.ts", "shared/**/*.ts"]
 }

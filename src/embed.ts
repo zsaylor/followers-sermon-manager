@@ -1,16 +1,6 @@
-(function () {
-  interface Sermon {
-    id: string;
-    title: string;
-    description: string;
-    speaker: string;
-    date: string;
-    audioUrl: string;
-    audioFileSize: number;
-    durationSeconds: number;
-    createdAt: string;
-  }
+import type { Sermon } from "../shared/types";
 
+(function () {
   // Get limit from URL params
   const urlParams = new URLSearchParams(window.location.search);
   const limit = parseInt(urlParams.get("limit") || "5", 10);

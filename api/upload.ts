@@ -11,7 +11,7 @@ import {
   PUBLIC_URL,
 } from "../lib/r2";
 import { HeadBucketCommand } from "@aws-sdk/client-s3";
-import { Sermon } from "../lib/types";
+import { Sermon } from "../shared/types";
 import { safeLog, safeError } from "../lib/logger";
 
 export const config = {

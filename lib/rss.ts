@@ -1,4 +1,4 @@
-import { Sermon, PodcastMeta } from "./types";
+import { Sermon, PodcastMeta } from "../shared/types";
 
 export function escapeXml(str: string): string {
   return str

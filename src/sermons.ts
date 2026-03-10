@@ -1,17 +1,6 @@
-(function () {
-  interface Sermon {
-    id: string;
-    title: string;
-    description: string;
-    speaker: string;
-    date: string;
-    audioUrl: string;
-    audioFileSize: number;
-    durationSeconds: number;
-    createdAt: string;
-    keywords?: string[];
-  }
+import type { Sermon } from "../shared/types";
 
+(function () {
   let isAuthenticated = false;
   let currentPage = 1;
   const limit = 10;

@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { authenticateRequest } from "../lib/auth";
 import { getSermons, putSermons } from "../lib/r2";
-import type { Sermon } from "../lib/types";
+import type { Sermon } from "../shared/types";
 import { safeError, safeLog } from "../lib/logger";
 
 function parseJsonBody(req: VercelRequest): any {
