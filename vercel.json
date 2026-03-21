@@ -15,7 +15,8 @@
         {
           "key": "Cache-Control",
           "value": "s-maxage=300, stale-while-revalidate=600"
-        }
+        },
+        { "key": "Access-Control-Allow-Origin", "value": "*" }
       ]
     },
     {
