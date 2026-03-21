@@ -345,7 +345,7 @@ import type { Sermon } from "../shared/types";
   // Load and display latest sermon
   async function loadSermons() {
     try {
-      const response = await fetch("/api/sermons");
+      const response = await fetch("/api/sermons?limit=1");
       const data = await response.json();
 
       if (data.sermons.length === 0) {
@@ -353,7 +353,6 @@ import type { Sermon } from "../shared/types";
         return;
       }
 
-      // Show only the first sermon (most recent)
       const sermon = data.sermons[0];
       const date = new Date(sermon.date).toLocaleDateString("en-US", {
         year: "numeric",

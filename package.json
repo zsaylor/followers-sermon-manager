@@ -17,6 +17,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "3.1002.0",
     "@aws-sdk/s3-request-presigner": "3.1002.0",
-    "busboy": "^1.6.0"
+    "busboy": "^1.6.0",
+    "vercel": "^50.32.5"
   }
 }
