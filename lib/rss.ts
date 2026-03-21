@@ -65,7 +65,7 @@ ${keywordsXml}    </item>`;
     })
     .join("\n");
 
-  const selfUrl = `${process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://your-app.vercel.app"}/api/feed`;
+  const selfUrl = `https://followers-sermon-manager.vercel.app/api/feed`;
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0"
